@@ -1,4 +1,5 @@
 package domino;
+
 public class Domino {
     private int leftNumDots;
     private int rightNumDots;
@@ -10,6 +11,12 @@ public class Domino {
 
     public int getLeftNumDots() {
         return leftNumDots;
+    }
+
+    public void rotateDomino() {
+        int temp = this.leftNumDots;
+        this.leftNumDots = this.rightNumDots;
+        this.rightNumDots = temp;
     }
 
 
