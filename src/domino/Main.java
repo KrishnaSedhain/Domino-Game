@@ -1,336 +1,375 @@
 package domino;
-
 import java.util.ArrayList;
 import java.util.Scanner;
 
 public class Main {
 
-    private final int startingDominos = 7;
+    private final int startingDomino = 7;
     private final Board board = new Board();
     private final Player human = new Player(Players.Human);
     private final Player computer = new Player(Players.Computer);
     private Players currentPlayer = Players.Human;
-    private final Scanner inputScanner = new Scanner(System.in);
+    private final Scanner scanner = new Scanner(System.in);
     private boolean gameOver = false;
+    private String winnerSelection = " player";
 
     public static void main(String[] args) {
-        new Main().startGame();
+        Main gameManager = new Main();
+        gameManager.startGame();
     }
 
     public void startGame() {
-        distributeDominos();
+        distributeDomino(human, computer, board);
+        // end the game when the boneyard is empty or when both players have taken a turn without placing a domino
         while (!gameOver) {
             if (currentPlayer == Players.Human) {
-                humanTurn();
-            } else {
-                computerTurn();
+                playDiceForHuman();
+                checkGameEnd();
             }
-            checkGameEnd();
+            else {
+                playDiceForComputer();
+                checkGameEnd();
+            }
         }
     }
 
 
-    public boolean doesPickedDiceMatchEitherEnd(Domino diceFromBoneyard, Board board) {
-        if (board.getPlayedDominos().size() > 0) {
-            int leftPlayedDice = board.getFirstPlayedDomino().getLeftNumDots();
-            int rightPlayedDice = board.getLastPlayedDomino().getRightNumDots();
+    private void checkGameEnd() {
+        boolean validPlayForHuman = checkIfValidPlayExists(human.getTray(), board);
+        boolean validPlayForComputer = checkIfValidPlayExists(computer.getTray(), board);
+        if (!validPlayForHuman && !validPlayForComputer) {
+            // if the player's tray is empty then they are the winner
+            if (human.getTray().isEmpty()) {
+                winnerSelection = "human";
+                System.out.println("Ending the game");
+                System.out.println("The winner is " + winnerSelection);
+                gameOver = true;
+            } else if (computer.getTray().isEmpty()) {
+                winnerSelection = "computer";
+                System.out.println("Ending the game");
+                System.out.println("The winner is " + winnerSelection);
+                gameOver = true;
+            } else {
+                // otherwise count the scores and show who the winner is.
+                int remainingHumanTrayCount = human.getTray().stream().mapToInt(d -> d.getLeftNumDots() + d.getRightNumDots()).sum();
+                int remainingComputerTrayCount = computer.getTray().stream().mapToInt(d -> d.getLeftNumDots() + d.getRightNumDots()).sum();
+
+                if (remainingComputerTrayCount > remainingHumanTrayCount) {
+                    winnerSelection = "human";
+                } else if (remainingComputerTrayCount < remainingHumanTrayCount) {
+                    winnerSelection = "computer";
+                } else {
+                    winnerSelection = "no-one. It's a tie!";
+                }
+                System.out.println("Ending the game");
+                System.out.println("The winner is " + winnerSelection);
+                gameOver = true;
+            }
+        }
+    }
+
+
+
+    public boolean checkIfValidPlayExists(ArrayList<Domino> tray, Board board) {
+        if (tray.isEmpty()) {
+            return false; // Can't play if the tray is empty.
+        }
+
+        if (board.getPlayedDomino().isEmpty()) {
+            return true; // Any domino can be played if the board is empty.
+        }
+
+        int leftEnd = board.getPlayedDomino().getFirst().getLeftNumDots();
+        int rightEnd = board.getPlayedDomino().getLast().getRightNumDots();
+
+        for (Domino domino : tray) {
+            if (domino.getLeftNumDots() == 0 || domino.getRightNumDots() == 0 ||
+                    domino.getLeftNumDots() == leftEnd || domino.getRightNumDots() == leftEnd ||
+                    domino.getLeftNumDots() == rightEnd || domino.getRightNumDots() == rightEnd) {
+                return true; // Found a domino that can be played.
+            }
+        }
+
+        return false; // No domino in the tray can be played.
+    }
+
+
+
+
+    private void printPlayingBoard(){
+        String firstLine = "";
+        String secondLine = "";
+        int lineCounter = 0;
+        for (Domino dice: board.getPlayedDomino()){
+            if (lineCounter == 0){
+                firstLine += "["+ dice.getLeftNumDots()+ " " + dice.getRightNumDots() + "]";
+                lineCounter++;
+            }
+            else if (lineCounter ==1){
+                secondLine += "["+ dice.getLeftNumDots()+ " " + dice.getRightNumDots() + "]";
+                lineCounter--;
+            }
+        }
+        System.out.println(firstLine);
+        System.out.println("  " + secondLine);
+    }
+
+
+
+
+    private void playDiceForComputer(){
+        System.out.println("Computer has " + computer.getTray().size() + " dominos");
+        // only print the boneyard size if the size is not null
+        int boneyardSize = board.getAvailableDomino() == null ? 0 :board.getAvailableDomino().size();
+        System.out.println("Boneyard contains " + boneyardSize + " dominos");
+        printPlayingBoard();
+        printHumanTray();
+        System.out.println("Computer's Turn");
+        checkIfValidPlayForComputer();
+        System.out.println("Computer has " + computer.getTray().size() + " dominos");
+        System.out.println("Boneyard contains " + boneyardSize + " dominos");
+        printPlayingBoard();
+    }
+
+
+    public void checkIfValidPlayForComputer() {
+        ArrayList<Domino> computerTray = computer.getTray();
+        // check for a match in the left of first dice and right of last dice
+        int leftEnd = board.getPlayedDomino().getFirst().getLeftNumDots();
+        int rightEnd = board.getPlayedDomino().getLast().getRightNumDots();
+
+        for (int i = 0; i < computerTray.size(); i++) {
+            Domino computerDice = computerTray.get(i);
+            // Check if the current domino has a wildcard (0) or can match the ends
+            boolean canPlayLeft = computerDice.getLeftNumDots() == 0 || computerDice.getRightNumDots() == 0 || computerDice.getLeftNumDots() == leftEnd || computerDice.getRightNumDots() == leftEnd;
+            boolean canPlayRight = computerDice.getLeftNumDots() == 0 || computerDice.getRightNumDots() == 0 || computerDice.getLeftNumDots() == rightEnd || computerDice.getRightNumDots() == rightEnd;
+
+            // If the domino can be played on the left end, possibly rotating if needed
+            if (canPlayLeft) {
+                if (computerDice.getRightNumDots() != leftEnd && computerDice.getRightNumDots() != 0) {
+                    computerDice.rotate();
+                }
+                board.placeOnLeft(computerDice);
+                computerTray.remove(i);
+                currentPlayer = Players.Human;
+                System.out.println("Computer plays [" + computerDice.getLeftNumDots() + " " +
+                        computerDice.getRightNumDots() + "] at left");
+                return;
+            }
+            // If the domino can be played on the right end, possibly rotating if needed
+            else if (canPlayRight) {
+                if (computerDice.getLeftNumDots() != rightEnd && computerDice.getLeftNumDots() != 0) {
+                    computerDice.rotate();
+                }
+                board.placeOnRight(computerDice);
+                computerTray.remove(i);
+                currentPlayer = Players.Human;
+                System.out.println("Computer plays [" + computerDice.getLeftNumDots() + " " +
+                        computerDice.getRightNumDots() + "] at right");
+                return;
+            }
+        }
+        // If no domino can be played, draw from the boneyard
+        while (board.getAvailableDomino() != null) {
+            System.out.println("Computer draws from boneyard");
+            Domino diceFromBoneyard = board.drawFromBoneyard();
+            computerTray.add(diceFromBoneyard);
+            if (doesPickedDiceMatchEitherEnd(diceFromBoneyard, board)){
+                break;
+            }
+        }
+        // change player to human
+        currentPlayer = Players.Human;
+    }
+
+
+
+    public boolean doesPickedDiceMatchEitherEnd(Domino diceFromBoneyard, Board board){
+        if (board.getPlayedDomino().size() > 0) {
+            int leftPlayedDice = board.getPlayedDomino().getFirst().getLeftNumDots();
+            int rightPlayedDice = board.getPlayedDomino().getLast().getRightNumDots();
             if (diceFromBoneyard.getLeftNumDots() == leftPlayedDice) {
-                diceFromBoneyard.rotateDomino();
-                board.placeOnLeft(diceFromBoneyard, Players.Computer);
+                diceFromBoneyard.rotate();
+                board.placeOnLeft(diceFromBoneyard);
                 return true;
             } else if (diceFromBoneyard.getRightNumDots() == rightPlayedDice) {
-                diceFromBoneyard.rotateDomino();
-                board.placeOnRight(diceFromBoneyard, Players.Computer);
+                diceFromBoneyard.rotate();
+                board.placeOnRight(diceFromBoneyard);
                 return true;
             } else if (diceFromBoneyard.getLeftNumDots() == rightPlayedDice) {
-                board.placeOnRight(diceFromBoneyard, Players.Computer);
+                board.placeOnRight(diceFromBoneyard);
                 return true;
             } else if (diceFromBoneyard.getRightNumDots() == leftPlayedDice) {
-                board.placeOnLeft(diceFromBoneyard, Players.Computer);
+                board.placeOnLeft(diceFromBoneyard);
                 return true;
             }
         }
         return false;
     }
 
-    private void humanTurn() {
-        boolean moveCompleted = false;
-        while (!moveCompleted && !gameOver) {
-            printPlayingBoard();
+    private void playDiceForHuman() {
+        boolean selectedDice = false;
+        while (!selectedDice) {
             printHumanTray();
-            int boneyardSize = board.getBoneyardSize();
-            System.out.println("Boneyard contains " + boneyardSize + " dominos");
-            System.out.println("Human’s turn");
-            System.out.println("[p] Play Domino   [d] Draw from boneyard   [q] Quit");
-            String option = inputScanner.next();
 
-            switch (option) {
+            // Check for valid play before prompting the options.
+            boolean validPlayExists = checkIfValidPlayExists(human.getTray(), board);
+
+            System.out.println("Human’s turn\n" +
+                    "[p] Play Domino\n" +
+                    "[d] Draw from boneyard\n" +
+                    "[q] Quit");
+
+            String humanOptions = scanner.next();
+
+            switch (humanOptions) {
                 case "p" -> {
-                    System.out.println("Which domino? (enter index)");
-                    if (inputScanner.hasNextInt()) {
-                        int index = inputScanner.nextInt();
-                        if (isValidIndex(index, human.getTray().size())) {
-                            if (playSelectedDomino(human, index)) {
-                                moveCompleted = true;
-                            }
-                        } else {
-                            System.out.println("Invalid Domino Index. Try again.");
+                    System.out.println("Which domino?");
+                    if (!scanner.hasNextInt()) {
+                        System.out.println("Please enter a valid number");
+                        return;
+                    }
+                    int dominoIndex = scanner.nextInt();
+                    String leftRight;
+                    String rotate;
+                    if (human.getTray().size() <= dominoIndex || dominoIndex < 0) {
+                        System.out.println("Invalid Domino Index");
+                        continue;
+                    }
+                    System.out.println("Left or Right? (l/r)");
+                    leftRight = scanner.next();
+                    if (leftRight.equals("l") || leftRight.equals("r")) {
+                        System.out.println("Rotate first? (y/n)");
+                        rotate = scanner.next();
+                        if (!(rotate.equals("y") || rotate.equals("n"))) {
+                            System.out.println("Wrong Input!");
+                            continue;
                         }
-                    } else {
-                        System.out.println("Please enter a valid number.");
-                        inputScanner.next();
+                        // if true, change isPlaying.
+                        boolean isValid = checkIfValidPlayForHuman(dominoIndex, leftRight, rotate);
+                        if (isValid) {
+                            selectedDice = true;
+                            // print what index number is going to be played at what location (left or right)
+                            if (leftRight.equals("l")) {
+                                System.out.println("Playing [" + board.getPlayedDomino().getFirst().getLeftNumDots() + " "
+                                        + board.getPlayedDomino().getFirst().getRightNumDots() + "] at left");
+                            } else
+                                System.out.println("Playing [" + board.getPlayedDomino().getFirst().getLeftNumDots() + " "
+                                        + board.getPlayedDomino().getFirst().getRightNumDots() + "] at right");
+                            currentPlayer = Players.Computer;
+                        }
+                        else {
+                            System.out.println("Invalid play. Please check again!");
+                        }
                     }
                 }
                 case "d" -> {
-                    if (!hasValidMove(human.getTray(), board)) {
-                        drawFromBoneyard(human);
+                    if (!validPlayExists) {
+                        Domino diceFromBoneyard = board.drawFromBoneyard();
+                        if (diceFromBoneyard != null) {
+                            human.getTray().add(diceFromBoneyard);
+                            // Now check if the new domino can be played
+                            if (checkIfValidPlayExists(human.getTray(), board)) {
+                                System.out.println("You drew a playable domino: [" + diceFromBoneyard.getLeftNumDots() + "," + diceFromBoneyard.getRightNumDots() + "]");
+                                System.out.println("You can now play this domino.");
+                                // Do not return here; instead, allow the user to play.
+                            } else {
+                                System.out.println("The drawn domino doesn't match and will be added to your tray.");
+                                // If the new domino still doesn't provide a valid play, continue the loop.
+                            }
+                        } else {
+                            System.out.println("The boneyard is empty, so no domino can be drawn..");
+                            // If boneyard is empty, handle accordingly (e.g., switch turn, end game, etc.).
+                        }
                     } else {
-                        System.out.println("You have a valid move. You cannot draw from the boneyard.");
+                        System.out.println("You are not allowed to draw since you have a playable move available in your tray..");
                     }
                 }
                 case "q" -> {
                     System.out.println("Quitting Game");
+                    selectedDice = true;
                     gameOver = true;
-                    moveCompleted = true;
                 }
                 default -> System.out.println("Invalid option. Please try again.");
             }
         }
-        currentPlayer = Players.Computer;
     }
 
-    private void computerTurn() {
-        System.out.println("Computer's turn to play");
-        int boneyardSize = board.getBoneyardSize();
-        System.out.println("Boneyard contains " + boneyardSize + " dominos");
-        printPlayingBoard();
-        printHumanTray();
-        if (hasValidMove(computer.getTray(), board)) {
-            playDomino(computer);
-        } else {
-            while (board.getBoneyardSize() > 0) {
-                System.out.println("Computer draws from boneyard");
-                Domino drawn = board.drawFromBoneyard();
-                computer.getTray().add(drawn);
-                if (doesPickedDiceMatchEitherEnd(drawn, board)) {
-                    break;
-                }
-            }
-        }
-        currentPlayer = Players.Human;
-    }
 
-    private boolean playSelectedDomino(Player player, int index) {
-        Domino domino = player.getTray().get(index);
-        if (board.getPlayedDominos().isEmpty()) {
-            board.placeOnLeft(domino, Players.Human); // First domino is always played by the human
-            player.getTray().remove(index);
-            System.out.println("Playing [" + domino.getLeftNumDots() + " " + domino.getRightNumDots() + "] as the first domino");
-            return true;
-        }
-        System.out.println("Left or Right? (l/r)");
-        String side = inputScanner.next();
-        System.out.println("Rotate first? (y/n)");
-        String rotate = inputScanner.next();
-        if (rotate.equalsIgnoreCase("y")) {
-            domino.rotateDomino();
-        }
-        if (isValidMove(domino, side)) {
-            if (side.equalsIgnoreCase("l")) {
-                board.placeOnLeft(domino, Players.Human);
-                System.out.println("Playing [" + domino.getLeftNumDots() + " " + domino.getRightNumDots() + "] at left");
-            } else {
-                board.placeOnRight(domino, Players.Human);
-                System.out.println("Playing [" + domino.getLeftNumDots() + " " + domino.getRightNumDots() + "] at right");
-            }
-            player.getTray().remove(index);
-            return true;
-        } else {
-            System.out.println("Invalid move. Please try again.");
-            if (rotate.equalsIgnoreCase("y")) {
-                domino.rotateDomino();
-            }
-            return false;
-        }
-    }
-
-    private void playDomino(Player player) {
-        Domino bestDomino = null;
-        String bestSide = "";
-        int bestValue = -1;
-
-        for (Domino domino : player.getTray()) {
-            if (isValidMove(domino, "l")) {
-                int value = domino.getLeftNumDots() + domino.getRightNumDots();
-                if (value > bestValue) {
-                    bestValue = value;
-                    bestDomino = domino;
-                    bestSide = "l";
-                }
-            }
-            if (isValidMove(domino, "r")) {
-                int value = domino.getLeftNumDots() + domino.getRightNumDots();
-                if (value > bestValue) {
-                    bestValue = value;
-                    bestDomino = domino;
-                    bestSide = "r";
-                }
-            }
-        }
-
-        if (bestDomino != null) {
-            if (bestSide.equals("l")) {
-                board.placeOnLeft(bestDomino, Players.Computer);
-                System.out.println("Computer plays [" + bestDomino.getLeftNumDots() + " " +
-                        bestDomino.getRightNumDots() + "] at left");
-            } else {
-                board.placeOnRight(bestDomino, Players.Computer);
-                System.out.println("Computer plays [" + bestDomino.getLeftNumDots() + " " +
-                        bestDomino.getRightNumDots() + "] at right");
-            }
-            player.getTray().remove(bestDomino);
-        }
-    }
-
-    private void drawFromBoneyard(Player player) {
-        Domino domino = board.drawFromBoneyard();
-        if (domino != null) {
-            player.getTray().add(domino);
-            System.out.println((player == human ? "You" : "Computer") + " drew a domino from the boneyard.");
-            if (isValidMove(domino, "l") || isValidMove(domino, "r")) {
-                System.out.println("You can play the drawn domino.");
-                if (player == human) {
-                    playSelectedDomino(player, player.getTray().size() - 1);
-                } else {
-                    playDomino(player);
-                }
-            }
-        } else {
-            System.out.println("Boneyard is empty. No domino drawn.");
-        }
-    }
-
-    private boolean isValidMove(Domino domino, String side) {
-        if (board.getPlayedDominos().isEmpty()) {
-            return true;
-        }
-        int leftEnd = board.getFirstPlayedDomino().getLeftNumDots();
-        int rightEnd = board.getLastPlayedDomino().getRightNumDots();
-        if (side.equalsIgnoreCase("l")) {
-            return domino.getLeftNumDots() == leftEnd || domino.getRightNumDots() == leftEnd ||
-                    domino.getLeftNumDots() == 0 || domino.getRightNumDots() == 0;
-        } else if (side.equalsIgnoreCase("r")) {
-            return domino.getLeftNumDots() == rightEnd || domino.getRightNumDots() == rightEnd ||
-                    domino.getLeftNumDots() == 0 || domino.getRightNumDots() == 0;
-        }
-        return false;
-    }
-
-    public boolean hasValidMove(ArrayList<Domino> tray, Board board) {
-        if (tray.isEmpty()) {
-            return false;
-        }
-        if (board.getPlayedDominos().isEmpty()) {
-            return true;
-        }
-        int leftEnd = board.getFirstPlayedDomino().getLeftNumDots();
-        int rightEnd = board.getLastPlayedDomino().getRightNumDots();
-        for (Domino domino : tray) {
-            if (domino.getLeftNumDots() == leftEnd || domino.getRightNumDots() == leftEnd ||
-                    domino.getLeftNumDots() == rightEnd || domino.getRightNumDots() == rightEnd ||
-                    domino.getLeftNumDots() == 0 || domino.getRightNumDots() == 0) {
-                return true;
-            }
-        }
-        return false;
-    }
-
-    private void printHumanTray() {
+    private void printHumanTray (){
+        // print the human's tray
         System.out.print("Tray: [");
-        for (int i = 0; i < human.getTray().size(); i++) {
-            Domino domino = human.getTray().get(i);
-            System.out.print("[" + domino.getLeftNumDots() + " " + domino.getRightNumDots() + "]");
-            if (i != human.getTray().size() - 1) {
+        int numDice = human.getTray().size();
+        for(int i = 0; i < numDice; i++){
+            Domino dice = human.getTray().get(i);
+            System.out.print("[" + dice.getLeftNumDots()+ " "+ dice.getRightNumDots() + "]");
+            if(i != numDice - 1) {
                 System.out.print(", ");
             }
         }
         System.out.println("]");
     }
 
-    private void printPlayingBoard() {
-        String firstLine = "";  // Human's moves (left-aligned)
-        String secondLine = ""; // Computer's moves (indented)
 
-        int index = 0;
-        for (Domino domino : board.getPlayedDominos()) {
-            Players player = board.getPlayedBy().get(index);
-            if (player == Players.Human) {
-                // Human's move (left-aligned)
-                firstLine += "[" + domino.getLeftNumDots() + " " + domino.getRightNumDots() + "]";
-            } else {
-                // Computer's move (indented)
-                secondLine += "[" + domino.getLeftNumDots() + " " + domino.getRightNumDots() + "]";
-            }
-            index++;
+    private boolean checkIfValidPlayForHuman(int index, String leftRight, String rotate) {
+        if (board.getPlayedDomino().isEmpty()) {
+            // If the board is empty, any domino can be played.
+            board.getPlayedDomino().add(human.getDominoFromTray(index));
+            human.removedDominoFromPlayerTray(index);
+            return true;
         }
 
-        // Print the board
-        System.out.println(firstLine);
-        System.out.println("  " + secondLine); // Indent the computer's moves
+        Domino dominoToPlay = human.getDominoFromTray(index);
+        int leftEnd = board.getPlayedDomino().getFirst().getLeftNumDots();
+        int rightEnd = board.getPlayedDomino().getLast().getRightNumDots();
+
+        // Check if the domino or the board ends have a wildcard '0'
+        boolean canPlayLeft = dominoToPlay.getLeftNumDots() == 0 || dominoToPlay.getRightNumDots() == 0 ||
+                dominoToPlay.getLeftNumDots() == leftEnd || dominoToPlay.getRightNumDots() == leftEnd;
+        boolean canPlayRight = dominoToPlay.getLeftNumDots() == 0 || dominoToPlay.getRightNumDots() == 0 ||
+                dominoToPlay.getLeftNumDots() == rightEnd || dominoToPlay.getRightNumDots() == rightEnd;
+
+        if (rotate.equals("y")) {
+            dominoToPlay.rotate(); // This will swap the left and right numbers of the domino.
+        }
+
+        // Attempt to play the domino on the specified side if it's a valid move
+        if (leftRight.equals("l") && canPlayLeft) {
+            board.getPlayedDomino().addFirst(dominoToPlay);
+            human.removedDominoFromPlayerTray(index);
+            return true;
+        } else if (leftRight.equals("r") && canPlayRight) {
+            board.getPlayedDomino().addLast(dominoToPlay);
+            human.removedDominoFromPlayerTray(index);
+            return true;
+        }
+
+        // If the domino was rotated for the check and didn't match, rotate it back
+        if (rotate.equals("y")) {
+            dominoToPlay.rotate();
+        }
+
+        // If we reach here, no valid move was made
+        return false;
     }
 
-    private boolean isValidIndex(int index, int size) {
-        return index >= 0 && index < size;
-    }
 
-    private void checkGameEnd() {
-        boolean validHuman = hasValidMove(human.getTray(), board);
-        boolean validComputer = hasValidMove(computer.getTray(), board);
-        if (!validHuman && !validComputer) {
-            if (human.getTray().isEmpty()) {
-                System.out.println("Ending the game");
-                System.out.println("The winner is human");
-                gameOver = true;
-            } else if (computer.getTray().isEmpty()) {
-                System.out.println("Ending the game");
-                System.out.println("The winner is computer");
-                gameOver = true;
-            } else {
-                int humanSum = 0;
-                for (Domino d : human.getTray()) {
-                    humanSum += d.getLeftNumDots() + d.getRightNumDots();
+
+    public void distributeDomino(Player human, Player computer, Board board) {
+        for (Players player : Players.values()) {
+            for (int i = 0; i < startingDomino; i++) {
+                Domino dice = board.drawFromBoneyard();
+                if (dice != null) { // Check that we actually picked a domino
+                    if (player.equals(Players.Human)) {
+                        human.addDominoToPlayerTray(dice);
+                    } else {
+                        computer.addDominoToPlayerTray(dice);
+                    }
                 }
-                int computerSum = 0;
-                for (Domino d : computer.getTray()) {
-                    computerSum += d.getLeftNumDots() + d.getRightNumDots();
-                }
-                String winner;
-                if (humanSum < computerSum) {
-                    winner = "human";
-                } else if (computerSum < humanSum) {
-                    winner = "computer";
-                } else {
-                    winner = "no-one. It's a tie!";
-                }
-                System.out.println("Ending the game");
-                System.out.println("The winner is " + winner);
-                gameOver = true;
             }
         }
     }
 
-    public void distributeDominos() {
-        for (int i = 0; i < startingDominos; i++) {
-            Domino d1 = board.drawFromBoneyard();
-            if (d1 != null) {
-                human.addDiceToPlayerTray(d1);
-            }
-            Domino d2 = board.drawFromBoneyard();
-            if (d2 != null) {
-                computer.addDiceToPlayerTray(d2);
-            }
-        }
-    }
 
     public Board getBoard() {
         return board;
