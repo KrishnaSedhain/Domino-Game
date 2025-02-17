@@ -10,26 +10,39 @@ import java.util.Scanner;
  *
  * <p>The game supports a variable domino set size based on the maximum number
  * of dots specified (default is 6). It supports both human and computer players.</p>
+ *
  * @author Krishna Sedhain
  */
 public class Main {
 
-    /** The game board containing the domino set and the played dominoes. */
+    /**
+     * The game board containing the domino set and the played dominoes.
+     */
     private final Board board;
 
-    /** The human player. */
+    /**
+     * The human player.
+     */
     private final Player human = new Player(Players.Human);
 
-    /** The computer player. */
+    /**
+     * The computer player.
+     */
     private final Player computer = new Player(Players.Computer);
 
-    /** Tracks whose turn it is. */
+    /**
+     * Tracks whose turn it is.
+     */
     private Players currentPlayer = Players.Human;
 
-    /** Scanner for reading human input from the console. */
+    /**
+     * Scanner for reading human input from the console.
+     */
     private final Scanner scanner = new Scanner(System.in);
 
-    /** Flag to indicate if the game has ended. */
+    /**
+     * Flag to indicate if the game has ended.
+     */
     private boolean gameOver = false;
 
     /**
@@ -169,11 +182,11 @@ public class Main {
             if (domino.getLeftNumDots() == 0 || domino.getRightNumDots() == 0 ||
                     domino.getLeftNumDots() == leftEnd || domino.getRightNumDots() == leftEnd ||
                     domino.getLeftNumDots() == rightEnd || domino.getRightNumDots() == rightEnd) {
-                return true; // Found a domino that can be played.
+                return true;
             }
         }
 
-        return false; // No domino in the tray can be played.
+        return false;
     }
 
     /**
@@ -446,9 +459,9 @@ public class Main {
      * Distributes dominoes to both the human and computer players.
      * Each player receives the number of dominoes specified by {@code startingDomino}.
      *
-     * @param human  the human player
+     * @param human    the human player
      * @param computer the computer player
-     * @param board  the game board from which dominoes are drawn
+     * @param board    the game board from which dominoes are drawn
      */
     public void distributeDomino(Player human, Player computer, Board board) {
         for (Players player : Players.values()) {

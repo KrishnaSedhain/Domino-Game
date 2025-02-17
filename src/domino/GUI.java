@@ -37,8 +37,21 @@ import java.util.List;
  *
  * <p>In this version, any domino that has a 0 on either side is treated as a wildcard,
  * meaning it matches with any domino end.</p>
+ *
+ * <p>
+ * Additionally, this version supports an optional integer command line argument that
+ * specifies the maximum number of dots on a domino. If no argument is provided or if the
+ * value is 6, the default domino set (with up to 6 dots) is used. If the argument is any
+ * value between 3 and 9, that value is used. Values outside that range will cause an error.
+ *
+ * @author Krishna Sedhain
+ * </p>
  */
 public class GUI extends Application {
+
+    // Static field for maximum dots. Default is 6.
+    public static int MAX_DOTS = 6;
+
     private final Board board = new Board();
     private final Player human = new Player(Players.Human);
     private final Player computer = new Player(Players.Computer);
@@ -62,6 +75,30 @@ public class GUI extends Application {
     private Deque<Domino> latestAddedDice = new LinkedList<>();
 
     /**
+     * The init method is called before start() and processes command line arguments.
+     * It checks for an optional integer argument specifying the maximum number of dots.
+     */
+    @Override
+    public void init() throws Exception {
+        List<String> args = getParameters().getRaw();
+        if (!args.isEmpty()) {
+            try {
+                int value = Integer.parseInt(args.get(0));
+                // Accept value 6 (default) or any value between 3 and 9.
+                if (value == 6 || (value >= 3 && value <= 9)) {
+                    MAX_DOTS = value;
+                } else {
+                    System.err.println("Invalid domino set size. Please provide a value between 3 and 9 (or no argument for default 6).");
+                    System.exit(1);
+                }
+            } catch (NumberFormatException e) {
+                System.err.println("Invalid argument. Please provide an integer domino set size.");
+                System.exit(1);
+            }
+        }
+    }
+
+    /**
      * The main entry point for the JavaFX application.
      *
      * @param primaryStage The primary stage for this application, onto which
@@ -71,7 +108,11 @@ public class GUI extends Application {
     @Override
     public void start(Stage primaryStage) throws Exception {
         primaryStage.setTitle("Domino Game");
-        // Initialize game objects
+
+
+        System.out.println("Using domino set with maximum dots: " + MAX_DOTS);
+
+
         gameManager.distributeDomino(human, computer, board);
 
         // --- Style and layout the middle play area ---

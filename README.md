@@ -29,6 +29,11 @@ If a valid play exists, drawing from the boneyard is blocked; otherwise, the use
 A pop-up notifies the user if the boneyard is empty or when a winner is determined. The game ends when
 the user clicks "OK" in the winner notification.
 
+Both GUI version and Console version a set of same classes (Board.java, Domino.java and Player.java). The game has a
+flexibility of using different dominos for player's tray (computer and human) and different number of boneyard dominos.
+In the command line implementation, I have allowed command-line arguments specifying a maximum dot value from 3 to 9 
+(with 6 as the default); any value outside this range produces an error message and exits the program.
+
 # Known issues
 The console version has issues with ending the game properly. Sometimes, it doesn't recognize when the 
 game should stop or update the number of dominoes in the computer's tray or boneyard correctly.

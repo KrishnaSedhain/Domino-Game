@@ -2,6 +2,7 @@ package domino;
 
 /**
  * Represents a single domino tile with two numbered sides.
+ *
  * @author Krishna Sedhain
  */
 public class Domino {

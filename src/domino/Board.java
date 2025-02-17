@@ -7,6 +7,7 @@ import java.util.LinkedList;
 
 /**
  * Represents the game board for a domino game, managing available and played dominos.
+ *
  * @author Krishna Sedhain
  */
 public class Board {
