@@ -21,7 +21,7 @@ public class Domino {
     /**
      * Rotates the domino by swapping the left and right dot values.
      */
-    public void rotate() {
+    public void rotateDomino() {
         int temp = this.leftNumDots;
         this.leftNumDots = this.rightNumDots;
         this.rightNumDots = temp;

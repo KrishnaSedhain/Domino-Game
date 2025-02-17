@@ -24,8 +24,17 @@ import java.util.Deque;
 import java.util.LinkedList;
 import java.util.List;
 
+/**
+ * The GUI class represents the graphical user interface for a Domino game.
+ * It extends the JavaFX Application class and provides the layout and functionality
+ * for the game, including player interactions, game logic, and visual representation
+ * of the game state.
+ *
+ * <p>This class handles the distribution of dominoes, player turns, and game-over conditions.
+ * It also manages the visual components such as the player's tray, the middle play area,
+ * and the boneyard.</p>
+ */
 public class GUI extends Application {
-
     private final Board board = new Board();
     private final Player human = new Player(Players.Human);
     private final Player computer = new Player(Players.Computer);
@@ -33,8 +42,6 @@ public class GUI extends Application {
     private final HBox humanPlayAreaDown = new HBox();
     private final HBox numOfDicesUpdateHbox = new HBox();
     private final HBox middlePlayArea = new HBox();
-    private Stage primaryStage;
-    private BorderPane root;
     // Left–side container for menu options.
     private final VBox leftMenuOptions = new VBox();
 
@@ -50,9 +57,15 @@ public class GUI extends Application {
     private boolean isPopUpRequired = false;
     private Deque<Domino> latestAddedDice = new LinkedList<>();
 
+    /**
+     * The main entry point for the JavaFX application.
+     *
+     * @param primaryStage The primary stage for this application, onto which
+     *                     the application scene can be set.
+     * @throws Exception If an error occurs during the initialization of the application.
+     */
     @Override
     public void start(Stage primaryStage) throws Exception {
-        this.primaryStage = primaryStage;
         primaryStage.setTitle("Domino Game");
         // Initialize game objects
         gameManager.distributeDomino(human, computer, board);
@@ -68,7 +81,7 @@ public class GUI extends Application {
         humanPlayAreaDown.setPadding(new Insets(10));
 
         // --- Set up the root BorderPane ---
-        root = new BorderPane();
+        BorderPane root = new BorderPane();
         root.setBackground(new Background(new BackgroundFill(Color.DARKGREEN, CornerRadii.EMPTY, Insets.EMPTY)));
 
         // --- Bottom: Player’s Tray ---
@@ -142,7 +155,10 @@ public class GUI extends Application {
     }
 
     /**
-     * Creates the rotate domino toggle box.
+     * Creates a VBox containing the rotate domino toggle controls.
+     * The toggle controls allow the user to select whether to rotate a domino before playing.
+     *
+     * @return A VBox containing the label and radio buttons for rotating a domino.
      */
     private VBox createRotateToggleBox() {
         VBox rotateVbox = makeVbox();
@@ -175,7 +191,10 @@ public class GUI extends Application {
     }
 
     /**
-     * Creates the domino selection combo box with label.
+     * Creates a VBox containing the domino selection controls.
+     * Provides a label and a ComboBox to allow the user to select which domino to play.
+     *
+     * @return A VBox containing the domino selection label and combo box.
      */
     private VBox createDominoSelectionComboBox() {
         VBox dominoSelectionVbox = makeVbox();
@@ -192,7 +211,10 @@ public class GUI extends Application {
     }
 
     /**
-     * Creates the side selection toggle with label.
+     * Creates a VBox containing the side selection controls.
+     * Allows the user to choose whether to play a domino on the left or right side of the board.
+     *
+     * @return A VBox containing the side selection label and radio buttons.
      */
     private VBox createWhichSideToPlay() {
         VBox leftOrRightOption = makeVbox();
@@ -223,7 +245,10 @@ public class GUI extends Application {
     }
 
     /**
-     * Creates the Play button.
+     * Creates and configures the Play button used to play a selected domino.
+     * The button action validates the play and updates the board accordingly.
+     *
+     * @return A Button configured for playing a domino.
      */
     private Button createPlayButton() {
         Button playButton = new Button("Play");
@@ -261,12 +286,12 @@ public class GUI extends Application {
                 }
                 if (currentRadioButton.equals("l")) {
                     if (rotateOptionSelection.equals("y")) {
-                        human.getDominoFromTray(comboBoxSelection).rotate();
+                        human.getDominoFromTray(comboBoxSelection).rotateDomino();
                     }
                     board.placeOnLeft(human.getDominoFromTray(comboBoxSelection));
                 } else if (currentRadioButton.equals("r")) {
                     if (rotateOptionSelection.equals("y")) {
-                        human.getDominoFromTray(comboBoxSelection).rotate();
+                        human.getDominoFromTray(comboBoxSelection).rotateDomino();
                     }
                     board.placeOnRight(human.getDominoFromTray(comboBoxSelection));
                 }
@@ -285,7 +310,10 @@ public class GUI extends Application {
     }
 
     /**
-     * Creates the Draw From Boneyard button.
+     * Creates and configures the button used to draw a domino from the boneyard.
+     * The button action checks if the player has a valid play, and if not, draws a domino.
+     *
+     * @return A Button configured for drawing a domino from the boneyard.
      */
     private Button createDrawFromBoneYardButton() {
         Button drawFromBoneyard = new Button("Draw From Boneyard");
@@ -314,7 +342,9 @@ public class GUI extends Application {
     }
 
     /**
-     * Creates the Exit button.
+     * Creates and configures the Exit button to terminate the application.
+     *
+     * @return A Button configured for exiting the game.
      */
     private Button createExitButton() {
         Button exitButton = new Button("Exit");
@@ -323,15 +353,25 @@ public class GUI extends Application {
         return exitButton;
     }
 
+    /**
+     * Adds domino images to the player's tray displayed in the GUI.
+     * If removeIndex is non-negative, it removes the domino image at that index and adds it to the middle play area.
+     * Otherwise, it adds new domino images representing the player's current tray.
+     *
+     * @param currPlayer         The player whose tray is being updated.
+     * @param humanPlayAreaDown  The HBox representing the player's tray area.
+     * @param removeIndex        The index of the domino to remove and update; if negative, no removal occurs.
+     */
     private void addDiceImageToPlayersTray(Player currPlayer, HBox humanPlayAreaDown, int removeIndex) {
-        int boardSize = gameManager.getBoard().getBoneyardSize();
-        for (int i = 0; i < boardSize; i++) {
+        int traySize = currPlayer.getTray().size(); // Changed from board size to tray size.
+        for (int i = 0; i < traySize; i++) {
             if (currPlayer.getTray().size() == 0) {
                 gameOverGUI(currPlayer);
                 return;
             }
             int leftNum = currPlayer.getDominoFromTray(i).getLeftNumDots();
             int rightNum = currPlayer.getDominoFromTray(i).getRightNumDots();
+            int boardSize = gameManager.getBoard().getBoneyardSize();
             for (int m = 0; m < boardSize; m++) {
                 for (int n = m; n < boardSize; n++) {
                     if (leftNum == m && rightNum == n) {
@@ -346,6 +386,16 @@ public class GUI extends Application {
         }
     }
 
+    /**
+     * Checks if the domino image should be added to the player's tray or moved to the middle play area.
+     *
+     * @param keepDicesHere The HBox containing the player's tray domino images.
+     * @param addToThisHbox The HBox representing the middle play area.
+     * @param removeIndex   The index of the domino to remove from the player's tray.
+     * @param m             The left number of dots on the domino.
+     * @param n             The right number of dots on the domino.
+     * @return true if a domino was removed and added to the middle play area; false otherwise.
+     */
     private boolean checkIfNullForAddingToTray(HBox keepDicesHere, HBox addToThisHbox, int removeIndex, int m, int n) {
         ImageView domino;
         if (removeIndex >= 0) {
@@ -383,6 +433,13 @@ public class GUI extends Application {
         return false;
     }
 
+    /**
+     * Checks if a specific Node is present within the given HBox.
+     *
+     * @param hbox The HBox to search within.
+     * @param node The Node to search for.
+     * @return true if the node is found in the HBox; false otherwise.
+     */
     private boolean isNodeInHBox(HBox hbox, Node node) {
         for (Node child : hbox.getChildren()) {
             if (child.equals(node)) {
@@ -392,6 +449,13 @@ public class GUI extends Application {
         return false;
     }
 
+    /**
+     * Checks if the selected domino constitutes a valid play based on the current board state.
+     * A play is valid if the domino can be placed on either end of the played domino chain according to game rules.
+     *
+     * @param dice The domino to validate.
+     * @return true if the play is valid; false otherwise.
+     */
     private boolean checkIfValidPlay(Domino dice) {
         if (board.getPlayedDomino().size() == 0) {
             return true;
@@ -412,6 +476,15 @@ public class GUI extends Application {
         return false;
     }
 
+    /**
+     * Retrieves an ImageView representing a domino with the specified left and right dot counts.
+     * If the rotate flag is set, the domino image is rotated.
+     *
+     * @param m      The left number of dots.
+     * @param n      The right number of dots.
+     * @param rotate If true, rotates the domino image.
+     * @return An ImageView of the domino, or null if the resource is not found.
+     */
     private ImageView getImage(int m, int n, boolean rotate) {
         if (rotate) {
             int temp = m;
@@ -432,6 +505,11 @@ public class GUI extends Application {
         return domino;
     }
 
+    /**
+     * Executes the computer player's turn.
+     * The computer evaluates its tray and attempts to play a valid domino.
+     * If no valid play is available, the computer draws from the boneyard until a valid play is found.
+     */
     private void computerPlay() {
         ArrayList<Domino> computerTray = computer.getTray();
         ImageView computerDomino;
@@ -443,14 +521,14 @@ public class GUI extends Application {
             int computerRightPlay = computerDice.getRightNumDots();
             if (computerDice.getLeftNumDots() == leftEnd) {
                 computerDomino = getImage(computerLeftPlay, computerRightPlay, true);
-                computerDice.rotate();
+                computerDice.rotateDomino();
                 board.placeOnLeft(computerDice);
                 middlePlayArea.getChildren().add(0, computerDomino);
                 computerTray.remove(i);
                 return;
             } else if (computerDice.getRightNumDots() == rightEnd) {
                 computerDomino = getImage(computerLeftPlay, computerRightPlay, true);
-                computerDice.rotate();
+                computerDice.rotateDomino();
                 board.placeOnRight(computerDice);
                 middlePlayArea.getChildren().add(computerDomino);
                 computerTray.remove(i);
@@ -482,6 +560,12 @@ public class GUI extends Application {
         computerPlay();
     }
 
+    /**
+     * Displays the game over GUI indicating the winning player.
+     * The method creates a modal window that announces the game outcome and terminates the application upon closure.
+     *
+     * @param playedLast The player who played last, used to determine the winner.
+     */
     private void gameOverGUI(Player playedLast) {
         String playerWins = "You win the game!";
         String computerWins = "The computer wins!";
@@ -508,6 +592,13 @@ public class GUI extends Application {
         }
     }
 
+    /**
+     * Evaluates if the game has ended based on the availability of valid plays for both players.
+     * If no valid plays are available for both players, the game is ended and the winner is declared.
+     *
+     * @param lastPlayedPlayerForWinnerSelectionPlayer The player who last played a domino.
+     * @return true if the game has ended; false otherwise.
+     */
     private boolean gameEndStatus(Player lastPlayedPlayerForWinnerSelectionPlayer) {
         boolean validPlayForHuman = gameManager.checkIfValidPlayExists(human.getTray(), board);
         boolean validPlayForComputer = gameManager.checkIfValidPlayExists(computer.getTray(), board);
@@ -525,6 +616,12 @@ public class GUI extends Application {
         return false;
     }
 
+    /**
+     * Displays a modal pop-up window with the specified title and message.
+     *
+     * @param title The title of the pop-up window.
+     * @param label The message to display in the pop-up window.
+     */
     private void popUpWindow(String title, String label) {
         Stage gameOverWindow = new Stage();
         gameOverWindow.setTitle(title);
@@ -540,6 +637,15 @@ public class GUI extends Application {
         gameOverWindow.showAndWait();
     }
 
+    /**
+     * Configures a modal stage with a given layout, scene, and message.
+     * Adds an OK button to close the pop-up.
+     *
+     * @param gameOverWindow The Stage to be configured as a pop-up.
+     * @param gameOverLayout The VBox layout of the pop-up window.
+     * @param gameOverScene  The Scene of the pop-up window.
+     * @param winnerMessage  The Label displaying the message.
+     */
     private void newStageIfInvalidPlayPopUp(Stage gameOverWindow, VBox gameOverLayout, Scene gameOverScene, Label winnerMessage) {
         Button closeButton = new Button("Ok");
         styleButton(closeButton);
@@ -549,6 +655,13 @@ public class GUI extends Application {
         gameOverWindow.setScene(gameOverScene);
     }
 
+    /**
+     * Creates a styled Label with the specified text and font size.
+     *
+     * @param text The text to display in the label.
+     * @param size The font size of the label.
+     * @return A styled Label.
+     */
     private Label makeLabel(String text, int size) {
         Label label = new Label(text);
         label.setFont(Font.font("Helvetica,Arial,sans-serif", FontWeight.BOLD, size));
@@ -556,6 +669,11 @@ public class GUI extends Application {
         return label;
     }
 
+    /**
+     * Creates a styled VBox with preset spacing, padding, border, and background.
+     *
+     * @return A styled VBox.
+     */
     private VBox makeVbox() {
         VBox vBox = new VBox();
         vBox.setSpacing(10);
@@ -567,6 +685,11 @@ public class GUI extends Application {
         return vBox;
     }
 
+    /**
+     * Applies a consistent styling to a given Button.
+     *
+     * @param button The Button to style.
+     */
     private void styleButton(Button button) {
         button.setFont(Font.font("Verdana", FontWeight.BOLD, 16));
         button.setTextFill(Color.WHITE);
@@ -575,6 +698,11 @@ public class GUI extends Application {
         button.setEffect(new DropShadow(5, Color.BLACK));
     }
 
+    /**
+     * The main entry point of the application.
+     *
+     * @param args The command line arguments.
+     */
     public static void main(String[] args) {
         launch(args);
     }
