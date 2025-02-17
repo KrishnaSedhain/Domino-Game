@@ -37,7 +37,6 @@ import java.util.List;
  *
  * <p>In this version, any domino that has a 0 on either side is treated as a wildcard,
  * meaning it matches with any domino end.</p>
- * @author Krishna Sedhain
  */
 public class GUI extends Application {
     private final Board board = new Board();
@@ -94,9 +93,10 @@ public class GUI extends Application {
         addDiceImageToPlayersTray(human, humanPlayAreaDown, -1);
         vBoxToIncludeLabelAndDominos.getChildren().addAll(humanTrayLabel, humanPlayAreaDown);
         vBoxToIncludeLabelAndDominos.setAlignment(Pos.CENTER);
-        HBox bottomRightContainer = new HBox(vBoxToIncludeLabelAndDominos);
-        bottomRightContainer.setAlignment(Pos.BOTTOM_RIGHT);
-        bottomRightContainer.setPadding(new Insets(10));
+        // Moved tray container to bottom left:
+        HBox bottomLeftContainer = new HBox(vBoxToIncludeLabelAndDominos);
+        bottomLeftContainer.setAlignment(Pos.BOTTOM_LEFT);
+        bottomLeftContainer.setPadding(new Insets(10));
 
         // --- Top: Game Counts ---
         numOfDicesUpdateHbox.setSpacing(20);
@@ -149,7 +149,7 @@ public class GUI extends Application {
 
         // --- Assemble the BorderPane ---
         root.setPadding(new Insets(10));
-        root.setBottom(bottomRightContainer);
+        root.setBottom(bottomLeftContainer);
         root.setTop(numOfDicesUpdateHbox);
         root.setCenter(middlePlayArea);
 
@@ -205,7 +205,8 @@ public class GUI extends Application {
         VBox dominoSelectionVbox = makeVbox();
         Label dominoSelectionLabel = makeLabel("please select which domino to play", 16);
         ComboBox<Integer> dominoSelectionOptions = new ComboBox<>();
-        for (int i = 0; i < gameManager.getBoard().getBoneyardSize(); i++) {
+        // Populate combo box based on the player's tray size
+        for (int i = 0; i < human.getTray().size(); i++) {
             dominoSelectionOptions.getItems().add(i);
         }
         dominoSelectionOptions.setOnAction(event -> {
