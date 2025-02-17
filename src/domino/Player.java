@@ -5,6 +5,7 @@ import java.util.ArrayList;
 /**
  * Enum representing the players in the game.
  * It includes two types of players: Human and Computer.
+ * @author Krishna Sedhain
  */
 enum Players {
     Human,

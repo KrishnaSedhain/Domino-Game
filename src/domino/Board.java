@@ -7,6 +7,7 @@ import java.util.LinkedList;
 
 /**
  * Represents the game board for a domino game, managing available and played dominos.
+ * @author Krishna Sedhain
  */
 public class Board {
     private ArrayList<Domino> availableDice;
@@ -58,7 +59,7 @@ public class Board {
      * @return List of available dominos, or null if empty.
      */
     public ArrayList<Domino> getAvailableDomino() {
-        if (this.availableDice.isEmpty()){
+        if (this.availableDice.isEmpty()) {
             return null;
         }
         return availableDice;
@@ -69,8 +70,8 @@ public class Board {
      *
      * @return The drawn domino, or null if the boneyard is empty.
      */
-    public Domino drawFromBoneyard(){
-        if (availableDice.isEmpty()){
+    public Domino drawFromBoneyard() {
+        if (availableDice.isEmpty()) {
             System.out.println("Boneyard is empty");
             return null;
         }
@@ -83,7 +84,7 @@ public class Board {
      *
      * @param dice The domino to place on the left.
      */
-    public void placeOnLeft(Domino dice){
+    public void placeOnLeft(Domino dice) {
         playedDomino.addFirst(dice);
     }
 
@@ -92,7 +93,7 @@ public class Board {
      *
      * @param dice The domino to place on the right.
      */
-    public void placeOnRight(Domino dice){
+    public void placeOnRight(Domino dice) {
         playedDomino.addLast(dice);
     }
 
@@ -110,7 +111,7 @@ public class Board {
      *
      * @return The first played domino.
      */
-    public Domino getFirstPlayedDomino(){
+    public Domino getFirstPlayedDomino() {
         return playedDomino.getFirst();
     }
 
@@ -132,4 +133,5 @@ public class Board {
     public int getDominoRange() {
         return dominoRange;
     }
+
 }

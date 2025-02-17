@@ -6,10 +6,11 @@ import java.util.Scanner;
 /**
  * The Main class manages the command-line version of the Domino game.
  * It handles game initialization, player turns, domino distribution,
- * and determining the winner.
+ * and determining the winner
  *
  * <p>The game supports a variable domino set size based on the maximum number
  * of dots specified (default is 6). It supports both human and computer players.</p>
+ * @author Krishna Sedhain
  */
 public class Main {
 

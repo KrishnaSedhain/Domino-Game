@@ -2,6 +2,7 @@ package domino;
 
 /**
  * Represents a single domino tile with two numbered sides.
+ * @author Krishna Sedhain
  */
 public class Domino {
     private int leftNumDots;
@@ -54,4 +55,5 @@ public class Domino {
     public String toString() {
         return "[" + leftNumDots + " " + rightNumDots + "]";
     }
+
 }

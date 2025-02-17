@@ -18,6 +18,7 @@ import javafx.scene.text.Font;
 import javafx.scene.text.FontWeight;
 import javafx.stage.Modality;
 import javafx.stage.Stage;
+
 import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.Deque;
@@ -33,6 +34,10 @@ import java.util.List;
  * <p>This class handles the distribution of dominoes, player turns, and game-over conditions.
  * It also manages the visual components such as the player's tray, the middle play area,
  * and the boneyard.</p>
+ *
+ * <p>In this version, any domino that has a 0 on either side is treated as a wildcard,
+ * meaning it matches with any domino end.</p>
+ * @author Krishna Sedhain
  */
 public class GUI extends Application {
     private final Board board = new Board();
@@ -358,9 +363,9 @@ public class GUI extends Application {
      * If removeIndex is non-negative, it removes the domino image at that index and adds it to the middle play area.
      * Otherwise, it adds new domino images representing the player's current tray.
      *
-     * @param currPlayer         The player whose tray is being updated.
-     * @param humanPlayAreaDown  The HBox representing the player's tray area.
-     * @param removeIndex        The index of the domino to remove and update; if negative, no removal occurs.
+     * @param currPlayer        The player whose tray is being updated.
+     * @param humanPlayAreaDown The HBox representing the player's tray area.
+     * @param removeIndex       The index of the domino to remove and update; if negative, no removal occurs.
      */
     private void addDiceImageToPlayersTray(Player currPlayer, HBox humanPlayAreaDown, int removeIndex) {
         int traySize = currPlayer.getTray().size(); // Changed from board size to tray size.
@@ -452,6 +457,9 @@ public class GUI extends Application {
     /**
      * Checks if the selected domino constitutes a valid play based on the current board state.
      * A play is valid if the domino can be placed on either end of the played domino chain according to game rules.
+     * <p>
+     * NEW: If the domino being played has a 0 on either side, it is treated as a wildcard and is always valid.
+     * </p>
      *
      * @param dice The domino to validate.
      * @return true if the play is valid; false otherwise.
@@ -462,6 +470,12 @@ public class GUI extends Application {
         }
         int leftNum = dice.getLeftNumDots();
         int rightNum = dice.getRightNumDots();
+
+        // Wildcard rule: if the domino has a 0 on either side, treat it as matching any end.
+        if (leftNum == 0 || rightNum == 0) {
+            return true;
+        }
+
         int playedLeftNum = board.getPlayedDomino().getFirst().getLeftNumDots();
         int playedRightNum = board.getPlayedDomino().getLast().getRightNumDots();
         if (rotateOptionSelection.equals("n")) {
@@ -509,6 +523,9 @@ public class GUI extends Application {
      * Executes the computer player's turn.
      * The computer evaluates its tray and attempts to play a valid domino.
      * If no valid play is available, the computer draws from the boneyard until a valid play is found.
+     * <p>
+     * NEW: The conditions now also treat a domino side with 0 as a wildcard that matches any end.
+     * </p>
      */
     private void computerPlay() {
         ArrayList<Domino> computerTray = computer.getTray();
@@ -519,27 +536,28 @@ public class GUI extends Application {
             Domino computerDice = computerTray.get(i);
             int computerLeftPlay = computerDice.getLeftNumDots();
             int computerRightPlay = computerDice.getRightNumDots();
-            if (computerDice.getLeftNumDots() == leftEnd) {
+
+            if (computerDice.getLeftNumDots() == leftEnd || computerDice.getLeftNumDots() == 0) {
                 computerDomino = getImage(computerLeftPlay, computerRightPlay, true);
                 computerDice.rotateDomino();
                 board.placeOnLeft(computerDice);
                 middlePlayArea.getChildren().add(0, computerDomino);
                 computerTray.remove(i);
                 return;
-            } else if (computerDice.getRightNumDots() == rightEnd) {
+            } else if (computerDice.getRightNumDots() == rightEnd || computerDice.getRightNumDots() == 0) {
                 computerDomino = getImage(computerLeftPlay, computerRightPlay, true);
                 computerDice.rotateDomino();
                 board.placeOnRight(computerDice);
                 middlePlayArea.getChildren().add(computerDomino);
                 computerTray.remove(i);
                 return;
-            } else if (computerDice.getLeftNumDots() == rightEnd) {
+            } else if (computerDice.getLeftNumDots() == rightEnd || computerDice.getLeftNumDots() == 0) {
                 computerDomino = getImage(computerLeftPlay, computerRightPlay, false);
                 board.placeOnRight(computerDice);
                 middlePlayArea.getChildren().add(computerDomino);
                 computerTray.remove(i);
                 return;
-            } else if (computerDice.getRightNumDots() == leftEnd) {
+            } else if (computerDice.getRightNumDots() == leftEnd || computerDice.getRightNumDots() == 0) {
                 computerDomino = getImage(computerLeftPlay, computerRightPlay, false);
                 board.placeOnLeft(computerDice);
                 middlePlayArea.getChildren().add(0, computerDomino);
