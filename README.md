@@ -1,5 +1,5 @@
 # **Overview**
-# CS-351 PROJECT-2 Domino
+# Domino Game
 This project features two versions of Domino game: a console-based version that is played
 through the command line and a JavaFX version that provides a graphical user interface for an 
 interactive gameplay experience. The game supports customizable domino set sizes (default is 6, 
